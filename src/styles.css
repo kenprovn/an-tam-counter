@@ -87,7 +87,7 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: Georgia, serif;
+  font-family: "Times New Roman", serif;
   font-size: 27px;
   letter-spacing: -0.8px;
 }
@@ -130,7 +130,7 @@ a {
   font-weight: 600;
 }
 .intro h1 {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Times New Roman", serif;
   font-weight: 400;
   font-size: 2.15em;
   letter-spacing: -0.7px;
@@ -264,7 +264,7 @@ a {
   margin-left: 5px;
 }
 .pad-subtitle {
-  font-family: Georgia, serif;
+  font-family: "Times New Roman", serif;
   font-style: italic;
   color: var(--muted);
   font-size: 1em;
@@ -428,7 +428,7 @@ a {
   border-bottom: 1px solid var(--line);
 }
 h2 {
-  font-family: Georgia, serif;
+  font-family: "Times New Roman", serif;
   font-weight: 400;
   font-size: 1.8em;
   margin: 8px 0 0;
@@ -539,7 +539,7 @@ h2 {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-family: Georgia, serif;
+  font-family: "Times New Roman", serif;
 }
 .badge {
   font-size: 9px;
