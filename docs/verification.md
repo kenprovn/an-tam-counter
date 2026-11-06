@@ -75,3 +75,12 @@ Unit test Audio dùng đối tượng mô phỏng trong bộ nhớ, không tạo
 - Tắt origin preview, reload PWA, khôi phục pack từ IndexedDB và chạm để phát 001/002/027/080/099/100 đến sự kiện `ended`, đúng count tương ứng. Không phụ thuộc cache MP3 host sẵn vì bản test không có MP3 trên server.
 - Settings viewport 320 px: contentWidth = clientWidth = 309; không tràn ngang. Chưa kiểm tra Android thật.
 - Bằng chứng riêng tư: `.local/zip-offline-review.json`, `.local/zip-indexeddb-proof.jpg`. Chỉ deploy code nhập ZIP; mỗi điện thoại phải chọn ZIP riêng, không tự đồng bộ âm thanh.
+
+## Pipeline public/private — 07/11/2026
+
+- Git ở đầu lượt là `eeb2e8b`, đã theo dõi 100 MP3. Không thêm, xóa, tạo lại hoặc sửa byte các file này trong thay đổi pipeline. Các mục lịch sử phía trên mô tả trạng thái tại thời điểm kiểm thử cũ.
+- `.vercelignore` cũ loại MP3; build production cũ có `audioFiles: 0`, revision `empty` và các URL mẫu trả 404. Đây là thiếu file trong artifact, không phải autoplay hay chỉ cache PWA.
+- Build mặc định private không xuất MP3 dù nguồn có đủ 100 file. Không ghi đè manifest nguồn; ZIP IndexedDB được giữ nguyên. Public bắt buộc đủ đúng 100 MP3 hợp lệ và hồ sơ quyền khớp cả 100 SHA-256. Thiếu thư mục/file, MP3 lỗi, tên thừa, quyền chưa duyệt hoặc sai hash làm build thất bại rõ ràng.
+- `npm run audio`: 100/100 file người dùng hợp lệ về kỹ thuật, 1.121.472 byte. `npm test`: 34/34 đạt. `npm run build`: thành công ở private. Thử public với bộ hiện tại bị chặn do chưa có `config/sonia-publication.json`; không cấp xác nhận thay người dùng.
+- Integration test chạy Vite và bộ tạo SW thực sự ở cả hai chế độ trong thư mục tạm. Public test dùng 100 bản của tín hiệu âm tổng hợp do test cung cấp, không phải Sonia/Microsoft output. Xác nhận dist có 100 MP3, bốn URL mẫu trả 200/audio-mpeg, hash và build-info khớp manifest. Tải trước 100 file qua HTTP, dừng server, SW trả lại đúng byte và giải mã PCM thành công cả 100 file từ cache, không gọi mạng.
+- Đây là kiểm thử tự động của pipeline và offline cache, không phải nghe giọng Sonia hoặc kiểm thử trên Android thật. Bộ test không được deploy; production giữ private khi chưa có bằng chứng quyền của bộ Sonia.

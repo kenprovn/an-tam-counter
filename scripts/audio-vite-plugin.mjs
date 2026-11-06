@@ -1,7 +1,8 @@
 import { readFile, readdir } from "node:fs/promises";
 import { prepareLibrary, audioDirectory } from "./audio-library.mjs";
+import { prepareDeployment, verifiedAudioBytes } from "./audio-publication.mjs";
 
-export function audioLibraryPlugin() {
+export function audioLibraryPlugin(options = {}) {
   let server,
     timer,
     running = Promise.resolve();
@@ -40,7 +41,10 @@ export function audioLibraryPlugin() {
       });
     },
     async generateBundle() {
-      const { manifest } = await prepareLibrary();
+      const { manifest } = await prepareDeployment(options);
+      this.info(
+        `Deployment audio: ${manifest.deploymentMode}, ${manifest.files.length}/100 MP3`,
+      );
       // Public copying is disabled for builds: only validated MP3s enter dist.
       const root = new URL("../public/", import.meta.url);
       const copy = async (directory, prefix = "") => {
@@ -68,7 +72,11 @@ export function audioLibraryPlugin() {
         this.emitFile({
           type: "asset",
           fileName: "audio/sonia/" + name,
-          source: await readFile(new URL(name, audioDirectory)),
+          source: await verifiedAudioBytes(
+            options.directory ?? audioDirectory,
+            number,
+            manifest.assets[number],
+          ),
         });
       }
     },

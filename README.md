@@ -4,7 +4,7 @@
 
 ## Trạng thái giọng đọc
 
-**Bộ file cục bộ do người dùng cung cấp: 100/100 MP3 đã qua kiểm tra kỹ thuật**, tổng 1.121.472 byte (khoảng 1,07 MiB), ngày 06/11/2026. Các file này được Git bỏ qua và chưa được công khai. Kiểm tra kỹ thuật không chứng minh danh tính giọng Sonia hay quyền phân phối. Giọng Web Speech chỉ là dự phòng, phụ thuộc thiết bị và có thể cần mạng. Không giả định Android có Sonia.
+**Bộ file do người dùng cung cấp: 100/100 MP3 đã qua kiểm tra kỹ thuật**, tổng 1.121.472 byte (khoảng 1,07 MiB). Người dùng đã đưa MP3 vào Git ở commit `eeb2e8b`; quyền phân phối bộ này chưa được xác minh. Build mặc định dùng chế độ `private`, không phục vụ MP3 từ hosting. Kiểm tra kỹ thuật không chứng minh danh tính giọng Sonia hay quyền phân phối. Giọng Web Speech chỉ là dự phòng, phụ thuộc thiết bị và có thể cần mạng. Không giả định Android có Sonia.
 
 Mặc định: `en-GB-SoniaNeural` (nữ, British English, Microsoft). MP3 cho 1–100 chỉ chứa số tiếng Anh: `One`, `Twenty-seven`, `One hundred`. Ngoài phạm vi này, số đếm vẫn tăng; Web Speech đọc số nếu bật dự phòng. Tắt dự phòng thì số thiếu MP3 không phát tiếng.
 
@@ -41,14 +41,14 @@ Nhập ZIP không thay số đếm, theme, mục tiêu hoặc cài đặt khác 
 
 1. Đặt các tệp **001.mp3 … 100.mp3** vào `D:\01_Projects\Count\an-tam-counter\public\audio\sonia\`. Mỗi tệp đọc đúng số tương ứng. Không đổi đuôi WAV/HTML thành `.mp3`; chữ thường và ba chữ số là bắt buộc. Có thể thêm từng phần; số thiếu dùng TTS nếu đã bật dự phòng.
 2. Chạy `npm run audio:check`. Công cụ kiểm tra đủ 100 tên, dung lượng 256 byte–2 MiB/tệp, chuỗi frame MPEG Layer III không bị cắt, giải mã PCM có tín hiệu, thời lượng 0,1–15 giây. Đây là giới hạn cho clip đọc một số. Tệp lỗi bị loại khỏi manifest; báo cáo chi tiết nằm ở **`.local/sonia-validation.json`**, gồm lý do lỗi, tệp thiếu, tổng byte, thời lượng, hash SHA-256 và mức tín hiệu. `npm run audio:scan` cho phép quét bộ chưa đủ mà không bắt buộc đủ 100.
-3. Chạy `npm run build`, rồi `npm run preview`. Chỉ các MP3 đã đạt kiểm tra được đưa vào `dist`. **Bản build cục bộ này có chứa âm thanh riêng tư; không tải `dist` lên hosting khi chưa xác minh quyền.** Không cần cài FFmpeg cho build; decoder WASM chỉ là dependency khi phát triển/build, không đưa vào frontend.
+3. Chạy `npm run dev` để thử các file trực tiếp trên localhost. `npm run build` mặc định tạo bản `private` không có MP3 host sẵn; dùng ZIP riêng khi thử `npm run preview`. Bản build `public` chỉ chứa MP3 khi đủ file và hồ sơ quyền đã xác minh, theo [quy trình triển khai âm thanh](docs/audio-deployment.md). Không cần cài FFmpeg cho build; decoder WASM chỉ là dependency khi phát triển/build, không đưa vào frontend.
 4. Mở URL local được in ra. Settings → Âm thanh → chọn **File MP3 Sonia**. Trình duyệt kiểm tra lại hash, dung lượng và khả năng giải mã trên thiết bị; badge đếm số MP3 đã xác nhận hợp lệ, không đếm file lỗi. MP3 được ưu tiên ngay dựa trên kiểm tra lúc build; nếu thiết bị không phát được, quay về TTS theo cài đặt. Quá trình kiểm tra chạy nền, không chặn thao tác đếm.
 5. MP3 đã kiểm tra được lưu vào cache theo revision. Chờ Settings báo **100/100 MP3** và **Đã lưu offline 100/100**; nút tải toàn bộ cũng kiểm tra/lưu lại 100 tệp. Sau đó có thể đóng máy chủ hoặc mất mạng và phát từ cache. Trình duyệt vẫn có thể xóa cache khi thiếu dung lượng.
 6. Khi thay bộ file, chạy lại check/build và đóng các tab/PWA cũ trước khi mở bản mới. Nếu dùng `npm run dev`, việc thêm/sửa/xóa MP3 sẽ tự quét lại và tải lại trang sau khi cập nhật manifest; dữ liệu đếm vẫn được lưu.
 
-**Bảo vệ file cục bộ:** `.gitignore` bỏ qua bộ âm thanh và `.local`; `.vercelignore` bỏ qua MP3 và `dist` khi upload bằng CLI. Build trong môi trường Vercel dừng nếu phát hiện MP3 cục bộ, nhằm tránh đưa file chưa xác minh quyền lên cloud. Không dùng `git add -f` hoặc xóa chặn khi chưa xác minh quyền. Bước cho phép phân phối cần được xử lý riêng sau khi có căn cứ quyền sử dụng phù hợp.
+**Bảo vệ khi triển khai:** `.local`, ZIP riêng và thông tin bí mật không được đưa lên hosting. `.vercelignore` cho MP3 đi vào builder để hỗ trợ bộ được cấp quyền, nhưng Vite tắt sao chép `public` tự động. Chế độ `private` luôn loại toàn bộ `audio/sonia` nguồn khỏi `dist`; chế độ `public` chỉ đóng gói đủ 100 MP3 sau khi xác nhận quyền khớp hash. Không bật public hoặc xác nhận hồ sơ cho bộ hiện tại khi chưa có căn cứ quyền phù hợp.
 
-`manifest.json` là dữ liệu sinh tự động và cũng được Git bỏ qua. Checkout chỉ chứa mã nguồn sẽ tạo manifest **0/100** khi build; bộ file trên máy cá nhân không bị xóa hoặc thay thế. `/build-info.json` trên bản đã deploy cho biết SHA commit và số MP3 thực sự có trong bản build, giúp đối chiếu production với GitHub.
+Manifest nguồn dùng cho development, có thể đã được Git theo dõi; build không tin hoặc ghi đè manifest này. Manifest trong `dist` được tạo theo chế độ triển khai: **private = 0/100**, **public hợp lệ = 100/100**; public thiếu file/quyền sẽ dừng build. `/build-info.json` ghi commit SHA, `audioMode`, `audioFiles` và `audioRevision`, được đối chiếu với manifest và hash MP3 thực tế trước khi tạo service worker.
 
 Nhận dạng nội dung tự động bằng Windows Speech Recognizer (offline, tập lựa chọn 100 số) đã khớp 1, 2, 27, 80, 99, 100; không thay thế nghe trực tiếp, không xác nhận được danh tính giọng. Báo cáo cục bộ: `.local/audio-review/recognition.json` và `.local/browser-audio-review.json`.
 
@@ -75,7 +75,7 @@ try {
 3. Script gọi REST API chính thức của Azure, cố định giọng Sonia, ngôn ngữ en-GB, tốc độ trung tính, âm lượng 0dB; xuất MP3 mono 24 kHz, 48 kbit/s vào `public/audio/sonia/001.mp3` … `100.mp3`. Không nhạc, không thêm câu thông báo, không thêm pause SSML. Có retry hữu hạn với lỗi quota tạm thời; file được ghi nguyên tử; khi lỗi giữ lại file đã tạo để chạy tiếp. Không in key hoặc nội dung lỗi Azure chứa thông tin tài khoản.
 4. Lần chạy tiếp theo giữ file đang có. Dùng `npm run audio:generate -- --overwrite` nếu muốn tạo lại toàn bộ (sẽ tiêu thụ quota mới).
 5. Chạy `npm run audio:check`, nghe kiểm tra từng file thật, đặc biệt 1, 27, 80, 99, 100: đúng Sonia, không rè/cắt chữ, không khoảng lặng dài, âm lượng tương đối đều. Công cụ kiểm tra frame và giải mã toàn bộ, không thay thế kiểm tra nghe.
-6. Chạy `npm run build` để thử cục bộ. **Chỉ sau khi xác minh quyền phân phối**, mới xem xét cho phép commit MP3 và mở chặn deploy. Hiện bộ MP3 vẫn bị Git bỏ qua, không có thao tác public tự động. Không commit secret. Khi được phép host file, sử dụng bình thường không gọi API Azure.
+6. **Chỉ sau khi xác minh quyền phân phối**, lập hồ sơ khớp bộ MP3 mới và bật chế độ public theo [quy trình triển khai](docs/audio-deployment.md). Build mặc định private và không có thao tác public tự động. Không commit secret. Khi được phép host file, sử dụng bình thường không gọi API Azure.
 
 Cũng có thể cung cấp sẵn 100 MP3 Sonia được tạo hợp lệ vào đúng thư mục rồi build. Công cụ không tự chứng minh danh tính giọng trong file được cung cấp; `generation.json` chỉ là thông tin nguồn của lượt tổng hợp, không phải chứng nhận. Không dùng Edge scraping hay endpoint không chính thức.
 

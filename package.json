@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "prebuild": "node scripts/prepare-audio.mjs",
+    "prebuild": "node scripts/prepare-audio.mjs --build",
     "build": "vite build && node scripts/build-sw.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test",
+    "audio": "node scripts/prepare-audio.mjs --require-complete",
+    "audio:publication-draft": "node scripts/publication-draft.mjs",
     "audio:generate": "node scripts/generate-sonia.mjs",
     "audio:plan": "node scripts/generate-sonia.mjs --dry-run",
     "audio:scan": "node scripts/prepare-audio.mjs",

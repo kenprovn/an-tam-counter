@@ -1,6 +1,9 @@
-public/audio/sonia/*.mp3
+# MP3 input must reach the builder for licensed public mode.
+# SONIA_AUDIO_MODE=private (default) never emits these files into dist.
+# Public mode requires 100 valid files and a matching rights confirmation.
 public/audio/sonia/*.tmp
 public/audio/sonia/generation.json
+public/audio/sonia/*.zip
 dist/
 .local/
 tests/

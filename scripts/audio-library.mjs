@@ -103,13 +103,10 @@ async function writeChanged(path, value) {
 export async function prepareLibrary({
   directory = audioDirectory,
   reportPath = new URL("../.local/sonia-validation.json", import.meta.url),
-  cloud = process.env.VERCEL === "1",
 } = {}) {
-  // Local imports must never become public merely because a Vercel build runs.
-  if (cloud && (await readdir(directory)).some((name) => /\.mp3$/i.test(name)))
-    throw new Error(
-      "Sonia MP3 đang ở chế độ cục bộ. Không đưa bộ file chưa xác minh quyền phân phối lên Vercel.",
-    );
+  // Scanning is not publication. The build never consumes this source manifest.
+  // Publication guard now lives in prepareDeployment() and the Vite emitter;
+  // both local and cloud builds enforce exactly the same private/public policy.
   const report = await inspectLibrary(directory);
   await writeChanged(new URL("manifest.json", directory), report.manifest);
   await mkdir(new URL("./", reportPath), { recursive: true });

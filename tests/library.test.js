@@ -7,7 +7,8 @@ import { pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { MPEGDecoder } from "mpg123-decoder";
 import { tone, silence } from "./fixtures/audio-fixtures.js";
-import { inspectLibrary, prepareLibrary } from "../scripts/audio-library.mjs";
+import { inspectLibrary } from "../scripts/audio-library.mjs";
+import { prepareDeployment } from "../scripts/audio-publication.mjs";
 import {
   validateManifest,
   verifyLibrary,
@@ -102,12 +103,12 @@ test("scanner excludes empty, renamed, truncated, silent, oversize and misnamed 
   assert.equal(result.invalid.length, 6);
   assert.deepEqual(result.unexpected, ["100.MP3"]);
 });
-test("Vercel publication guard refuses local audio without touching the library", async (t) => {
+test("publication guard refuses an incomplete public pack without touching the library", async (t) => {
   const directory = await temp(t);
   await writeFile(new URL("001.mp3", directory), tone);
   await assert.rejects(
-    prepareLibrary({ directory, cloud: true }),
-    /chế độ cục bộ/,
+    prepareDeployment({ directory, mode: "public" }),
+    /cần đủ 100\/100 MP3/,
   );
   assert.deepEqual(await readFile(new URL("001.mp3", directory)), tone);
   await assert.rejects(access(new URL("manifest.json", directory)));
