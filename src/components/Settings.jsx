@@ -10,6 +10,7 @@ import {
   Hand,
   Database,
   ChevronRight,
+  ArrowDownToLine,
 } from "lucide-react";
 import { themes } from "../config.js";
 export function Toggle({ label, checked, onChange, hint }) {
@@ -42,6 +43,10 @@ function Group({ icon: Icon, title, children, open }) {
 }
 export default function Settings({
   settings: s,
+  count,
+  online,
+  offlineReady,
+  install,
   change,
   close,
   player,
@@ -68,7 +73,7 @@ export default function Settings({
       >
         <header className="panel-heading">
           <div>
-            <span className="eyebrow">THEO CÁCH CỦA BẠN</span>
+            <span className="eyebrow">AN TÂM</span>
             <h2 id="settings-title">Cài đặt</h2>
           </div>
           <button
@@ -275,6 +280,14 @@ export default function Settings({
             </button>
           </Group>
           <Group icon={Database} title="Số biến & dữ liệu">
+            <div className="data-summary">
+              <span>
+                Số biến hiện tại<strong>{count.toLocaleString("vi-VN")}</strong>
+              </span>
+              <span>
+                Mục tiêu<strong>{s.goal.toLocaleString("vi-VN")}</strong>
+              </span>
+            </div>
             <label className="setting-row">
               Mục tiêu
               <input
@@ -314,6 +327,17 @@ export default function Settings({
               Đặt lại số biến về 0
             </button>
           </Group>
+          <button className="secondary-button full" onClick={install}>
+            <ArrowDownToLine size={17} />
+            Cài ứng dụng
+          </button>
+          <p className="device-status">
+            {!online
+              ? "Đang ngoại tuyến"
+              : offlineReady
+                ? "Ứng dụng đã sẵn sàng đếm offline"
+                : "Số biến được tự động lưu trên thiết bị"}
+          </p>
           <p className="settings-footer">
             An Tâm · Không tài khoản · Không quảng cáo
             <br />

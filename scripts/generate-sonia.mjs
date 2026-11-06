@@ -4,16 +4,50 @@ import { numberText } from "../src/audio/numbers.js";
 import { spawnSync } from "node:child_process";
 const key = process.env.AZURE_SPEECH_KEY;
 const region = process.env.AZURE_SPEECH_REGION;
+const dryRun = process.argv.includes("--dry-run");
+const overwrite = process.argv.includes("--overwrite");
+const directory = new URL("../public/audio/sonia/", import.meta.url);
+function validMp3(buffer) {
+  return (
+    buffer.length >= 256 &&
+    (buffer.subarray(0, 3).toString() === "ID3" ||
+      (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0))
+  );
+}
+if (dryRun) {
+  console.log(
+    "DRY RUN: no network calls, file writes or Azure charges. Voice: en-GB-SoniaNeural.",
+  );
+  let missing = 0;
+  for (let number = 1; number <= 100; number++) {
+    const name = `${String(number).padStart(3, "0")}.mp3`;
+    let exists = false;
+    try {
+      exists = validMp3(await readFile(new URL(name, directory)));
+    } catch (error) {
+      if (error.code !== "ENOENT") {
+        console.error(`Cannot inspect ${name}. Check local file permissions.`);
+        process.exit(1);
+      }
+    }
+    if (!exists) missing++;
+    console.log(
+      `${exists && !overwrite ? "Keep" : "Would generate"} ${name}: ${numberText(number)}`,
+    );
+  }
+  console.log(
+    `Plan complete: ${100 - missing}/100 valid MP3 headers already present. No audio was generated.`,
+  );
+  process.exit(0);
+}
 if (!key || !region || !/^[a-z0-9]+$/.test(region)) {
   console.error(
     "Set AZURE_SPEECH_KEY and AZURE_SPEECH_REGION in your local process environment. Never use VITE_ secrets.",
   );
   process.exit(1);
 }
-const directory = new URL("../public/audio/sonia/", import.meta.url);
 await mkdir(directory, { recursive: true });
 const endpoint = `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
-const overwrite = process.argv.includes("--overwrite");
 let generated = 0;
 try {
   for (let number = 1; number <= 100; number++) {
@@ -21,7 +55,10 @@ try {
     const path = new URL(name, directory);
     if (!overwrite) {
       try {
-        await readFile(path);
+        if (!validMp3(await readFile(path)))
+          throw new Error(
+            `Existing ${name} has an invalid MP3 header. Inspect it, or explicitly use --overwrite.`,
+          );
         console.log(`Keep ${name}`);
         continue;
       } catch (error) {
@@ -61,13 +98,7 @@ try {
         `Azure returned HTTP ${response.status} for ${name}. Check resource access, region, quota and billing.`,
       );
     const buffer = Buffer.from(await response.arrayBuffer());
-    if (
-      buffer.length < 256 ||
-      !(
-        buffer.subarray(0, 3).toString() === "ID3" ||
-        (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0)
-      )
-    )
+    if (!validMp3(buffer))
       throw new Error(`Azure did not return an MP3 for ${name}.`);
     const temporary = new URL(name + ".tmp", directory);
     await writeFile(temporary, buffer);

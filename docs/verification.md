@@ -31,4 +31,16 @@ Unit test Audio dùng đối tượng mô phỏng trong bộ nhớ, không tạo
 - Reset mở hộp xác nhận, xác nhận mới đặt về 0.
 - Viewport 320 và 360 px: không có tràn ngang theo kích thước DOM; đã chụp giao diện tại `docs/mobile-preview.jpg`.
 - Đã dừng tiến trình Vite preview, reload trang từ service worker cache thành công, số vẫn giữ 100, chạm tiếp lên 101. Đây là kiểm tra app shell khi máy chủ không truy cập được; không phải thử chế độ máy bay trên Android thật.
-- `npm test`: 12 kiểm thử đạt. `npm run build`: thành công. `npm run audio:check`: thất bại có chủ ý vì 0/100 MP3, đúng với trạng thái chưa có giọng thật.
+- Lần triển khai ban đầu: `npm test` có 12 kiểm thử đạt. `npm run build`: thành công. `npm run audio:check`: thất bại có chủ ý vì 0/100 MP3, đúng với trạng thái chưa có giọng thật.
+
+## Cập nhật UI theo mockup
+
+- Thay header kiểu editorial bằng tiêu đề gọn, icon nét sen, ba cụm Đọc số / − số + / Cài đặt. Bỏ slogan, thanh tiến độ và footer khỏi màn hình chính; mục tiêu, hoàn tác, cài PWA vẫn có trong Settings.
+- Vùng chạm phủ phần còn lại của viewport, bo góc/viền nhẹ, icon ngón tay chạm, chữ lớn; theme tím và xanh được đồng bộ theo hai ảnh tham chiếu. Settings giữ drawer và bốn nhóm, tinh chỉnh typography, card, toggle và khoảng cách.
+- Trình duyệt desktop: viewport 320×700 không tràn ngang hoặc cuộn dọc; vùng chạm khoảng 79%. Viewport 390×844 có vùng chạm khoảng 82%. Nút tăng/giảm có vùng chạm 44×44 px.
+- Nhập 27 → chạm 28 → giảm 27 → reload vẫn 27. Mở Settings, nghe thử, đổi theme không làm tăng số. Nhập số nguyên an toàn lớn nhất không tràn toolbar tại 320px.
+- Settings tại 320px có scrollWidth bằng clientWidth. Các input số/select dùng cỡ 16px trở lên để tránh zoom khi focus trên mobile. Chưa kiểm tra safe-area hoặc bàn phím trên điện thoại thật.
+- Fallback khi thiếu MP3 vẫn hiển thị tên giọng Microsoft David của máy thử. Thư viện Sonia vẫn là 0/100; không tổng hợp hoặc tạo file MP3 giả.
+- Thêm `npm run audio:plan`: dry-run liệt kê đúng 001…100, không cần key, không gọi mạng, không ghi file. Kiểm thử thiếu credentials xác nhận script thoát với thông báo rõ ràng.
+- `npm test`: 14/14 đạt sau cập nhật; `npm run build`: thành công. Ảnh mới: `docs/mobile-preview.jpg`, `docs/ui-green.jpg`, `docs/settings-preview.jpg`.
+- Bản production mới: 10 lần chạm từ 0 cho đúng 10; nhập 27 và reload vẫn 27. Sau khi dừng máy chủ preview, reload từ service worker vẫn mở được giao diện mới, chạm tăng từ 27 lên 28. Không xác nhận phát Sonia offline vì chưa có MP3 thật.

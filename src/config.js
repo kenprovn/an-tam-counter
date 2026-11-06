@@ -1,6 +1,6 @@
 export const themes = {
-  purple: { name: "Tím đen", accent: "#bda5f5", bg: "#100e18" },
-  green: { name: "Xanh lá", accent: "#9bceb2", bg: "#0d1612" },
+  purple: { name: "Tím đen", accent: "#be7bea", bg: "#0e0717" },
+  green: { name: "Xanh lá", accent: "#63dda0", bg: "#070d0b" },
   blue: { name: "Xanh dương", accent: "#9ebff2", bg: "#0d121b" },
   pink: { name: "Hồng đen", accent: "#e6abc8", bg: "#190f17" },
   earth: { name: "Cam đất", accent: "#dcb08b", bg: "#19120e" },

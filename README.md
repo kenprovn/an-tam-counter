@@ -22,7 +22,9 @@ npm run preview
 
 PWA/service worker chỉ được đăng ký trong bản production (`build` + `preview` hoặc HTTPS sau deploy). `dev` không cài service worker để tránh cache mã đang sửa. Icon PNG đã có sẵn; không cần Python khi deploy.
 
-## Tạo đủ 100 file Sonia bằng Azure Speech
+## How to generate Sonia MP3 files locally
+
+Chạy `npm run audio:plan` để kiểm tra kế hoạch đủ 100 số và file hiện có. Chế độ dry-run không cần key, không gọi mạng, không tạo file và không phát sinh phí Azure. `.env.example` chỉ minh họa tên biến; script đọc biến môi trường của tiến trình, không tự nạp tệp `.env`.
 
 1. Tự tạo/chọn Azure Speech resource mà bạn có quyền sử dụng, với quota và billing phù hợp; xem điều khoản áp dụng trong tài khoản. Việc tổng hợp có thể tính phí theo gói của bạn. Script không tự tạo tài khoản hoặc mua dịch vụ.
 2. Trên **máy phát triển**, cung cấp `AZURE_SPEECH_KEY` và `AZURE_SPEECH_REGION` qua biến môi trường của tiến trình. Không gửi key vào chat, không dùng tiền tố `VITE_`, không thêm key vào source, GitHub hoặc Vercel. Có thể nhập key ẩn trong PowerShell:
@@ -43,7 +45,7 @@ try {
 3. Script gọi REST API chính thức của Azure, cố định giọng Sonia, ngôn ngữ en-GB, tốc độ trung tính, âm lượng 0dB; xuất MP3 mono 24 kHz, 48 kbit/s vào `public/audio/sonia/001.mp3` … `100.mp3`. Không nhạc, không thêm câu thông báo, không thêm pause SSML. Có retry hữu hạn với lỗi quota tạm thời; file được ghi nguyên tử; khi lỗi giữ lại file đã tạo để chạy tiếp. Không in key hoặc nội dung lỗi Azure chứa thông tin tài khoản.
 4. Lần chạy tiếp theo giữ file đang có. Dùng `npm run audio:generate -- --overwrite` nếu muốn tạo lại toàn bộ (sẽ tiêu thụ quota mới).
 5. Chạy `npm run audio:check`, nghe kiểm tra từng file thật, đặc biệt 1, 27, 80, 99, 100: đúng Sonia, không rè/cắt chữ, không khoảng lặng dài, âm lượng tương đối đều. Chưa thể khẳng định chất lượng nghe khi chưa tạo file. Script kiểm tra tên, số lượng và header MP3, không thay thế kiểm tra nghe.
-6. Chạy `npm run build`, commit/push cả 100 MP3 và manifest rồi deploy lại. Không cần Azure trong ứng dụng đã triển khai; sử dụng bình thường không gọi API Azure.
+6. Chạy `npm run build`. **Bạn có thể chọn commit 100 MP3 cùng manifest để host bộ giọng với app trên Vercel**, sau đó push và deploy lại. Nếu không đưa MP3 vào bản triển khai thì ứng dụng tiếp tục báo thiếu bộ giọng và dùng fallback. Không commit secret. Không cần Azure trong ứng dụng đã triển khai; sử dụng bình thường không gọi API Azure.
 
 Cũng có thể cung cấp sẵn 100 MP3 Sonia được tạo hợp lệ vào đúng thư mục rồi build. Công cụ không tự chứng minh danh tính giọng trong file được cung cấp; `generation.json` chỉ là thông tin nguồn của lượt tổng hợp, không phải chứng nhận. Không dùng Edge scraping hay endpoint không chính thức.
 
@@ -62,6 +64,8 @@ Tài liệu chính thức: [Azure REST TTS](https://learn.microsoft.com/en-us/az
 ## Tính năng khác
 
 Giảm/tăng, nhập số, hoàn tác (100 lần gần nhất trong phiên), mục tiêu tùy chỉnh, reset có xác nhận, xuất/nhập JSON có xác nhận, 6 theme, cỡ chữ, tắt sáng/chuyển động, giảm chuyển động theo hệ thống, rung tùy chọn, chống chạm nhầm, Wake Lock, toàn màn hình, tiết kiệm pin, nút cài PWA khi trình duyệt cho phép. Không có ảnh tôn giáo, font hoặc ảnh tải ngoài.
+
+Màn hình chính theo mockup: tiêu đề nhỏ, ba cụm Đọc số / − số + / Cài đặt, vùng chạm lớn chiếm phần còn lại. Mục tiêu, hoàn tác, cài PWA và trạng thái thư viện Sonia nằm trong Settings để giữ màn hình đếm gọn. Hai màu tím đen và xanh lá dùng cùng bố cục; các theme khác vẫn hoạt động.
 
 ## Triển khai Vercel Hobby
 

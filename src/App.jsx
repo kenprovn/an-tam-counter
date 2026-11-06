@@ -1,16 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Volume2,
-  VolumeX,
-  Minus,
-  Plus,
-  SlidersHorizontal,
-  RotateCcw,
-  ArrowDownToLine,
-  CircleCheck,
-  Hand,
-  X,
-} from "lucide-react";
+import { X } from "lucide-react";
+import MainCounter from "./components/MainCounter.jsx";
 import { themes } from "./config.js";
 import { loadData, saveData, validCount, parseData } from "./utils/storage.js";
 import { createCounter } from "./utils/counter.js";
@@ -255,7 +245,6 @@ export default function App() {
     }
   }
   const theme = themes[settings.theme];
-  const progress = Math.min(100, (count / settings.goal) * 100);
   return (
     <div
       className={`app ${settings.glow && !settings.battery ? "has-glow" : ""} ${!settings.animation || settings.battery ? "no-animation" : ""}`}
@@ -265,169 +254,34 @@ export default function App() {
         "--font-scale": settings.fontSize,
       }}
     >
-      <main className="main-shell" inert={settingsOpen ? true : undefined}>
-        <header className="brand-header">
-          <a
-            className="brand"
-            href="/"
-            onClick={(event) => event.preventDefault()}
-          >
-            <span className="brand-mark">
-              <CircleCheck size={21} />
-            </span>
-            <span>
-              An Tâm<span className="brand-dot">.</span>
-            </span>
-          </a>
-          <span className="session-label">
-            <i />
-            KHÔNG GIAN TĨNH TÂM
-          </span>
-        </header>
-        <div className="intro">
-          <span className="eyebrow">MỖI LẦN CHẠM, MỘT LẦN AN TÂM</span>
-          <h1>Đếm biến Chú Đại Bi</h1>
-          <p>Thả lỏng tâm trí. Nhẹ nhàng tiếp tục.</p>
-        </div>
-        <div className="counter-toolbar" aria-label="Điều khiển số biến">
-          <button
-            className={`icon-button sound-button ${settings.enabled ? "active" : ""}`}
-            aria-label={settings.enabled ? "Tắt giọng đọc" : "Bật giọng đọc"}
-            aria-pressed={settings.enabled}
-            onClick={() => change({ enabled: !settings.enabled })}
-          >
-            {settings.enabled ? <Volume2 size={21} /> : <VolumeX size={21} />}
-          </button>
-          <button
-            className="count-readout"
-            onClick={edit}
-            aria-label={`Số biến hiện tại ${count}. Nhập số biến`}
-          >
-            <span>{count.toLocaleString("vi-VN")}</span>
-            <small>BIẾN ĐÃ TRÌ TỤNG</small>
-          </button>
-          <div className="step-controls">
-            <button
-              className="icon-button"
-              aria-label="Giảm một biến"
-              disabled={count === 0}
-              onClick={decrease}
-            >
-              <Minus size={20} />
-            </button>
-            <button
-              className="icon-button"
-              aria-label="Tăng một biến"
-              onClick={() => increment()}
-            >
-              <Plus size={20} />
-            </button>
-          </div>
-          <span className="toolbar-divider" />
-          <button
-            ref={settingsButton}
-            className="icon-button"
-            aria-label="Mở cài đặt"
-            onClick={() => setSettingsOpen(true)}
-          >
-            <SlidersHorizontal size={20} />
-          </button>
-        </div>
-        <button
-          className="count-pad"
-          aria-label="Chạm để đếm thêm một biến"
-          onClick={() => increment(true)}
-        >
-          <span className="pad-corner top-left" />
-          <span className="pad-corner top-right" />
-          <span className="pad-corner bottom-left" />
-          <span className="pad-corner bottom-right" />
-          <span key={pulse} className="tap-symbol">
-            <Hand size={40} strokeWidth={1.3} />
-            <span className="tap-plus">+</span>
-          </span>
-          <span className="pad-title">
-            CHẠM ĐỂ ĐẾM <b>+1</b>
-          </span>
-          <span className="pad-subtitle">Một biến chú. Một tâm an.</span>
-          <span className="pad-bottom">
-            <span className="tiny-dot" /> CHẠM BẤT KỲ ĐÂU TRONG VÙNG NÀY
-          </span>
-        </button>
-        <div className="goal-section">
-          <div>
-            <span>Hành trình hôm nay</span>
-            <strong>
-              {count >= settings.goal && <CircleCheck size={14} />}
-              {count.toLocaleString("vi-VN")}{" "}
-              <em>/ {settings.goal.toLocaleString("vi-VN")} biến</em>
-            </strong>
-          </div>
-          <div
-            className="progress-track"
-            role="progressbar"
-            aria-label="Tiến độ mục tiêu"
-            aria-valuenow={Math.min(count, settings.goal)}
-            aria-valuemin={0}
-            aria-valuemax={settings.goal}
-          >
-            <span style={{ width: `${progress}%` }} />
-          </div>
-          <p>
-            {count >= settings.goal
-              ? "Đã đạt mục tiêu. Bạn vẫn có thể tiếp tục đếm."
-              : "Không vội vàng. Mỗi biến đều có ý nghĩa."}
-          </p>
-        </div>
-        <footer className="app-footer">
-          <button onClick={undo}>
-            <RotateCcw size={14} />
-            Hoàn tác
-          </button>
-          <span className="save-indicator">
-            <i />
-            Tự động lưu
-          </span>
-          {installPrompt ? (
-            <button
-              onClick={async () => {
-                await installPrompt.prompt();
-                setInstallPrompt(null);
-              }}
-            >
-              <ArrowDownToLine size={14} />
-              Cài ứng dụng
-            </button>
-          ) : (
-            <button
-              onClick={() =>
-                setNotice(
-                  offlineReady
-                    ? "Ứng dụng đã sẵn sàng offline. Cài lên màn hình chính từ menu Chrome ⋮ → Cài đặt ứng dụng / Thêm vào màn hình chính."
-                    : "Mở bằng Chrome qua HTTPS; chọn menu ⋮ → Thêm vào màn hình chính. Offline hoạt động sau khi tải ứng dụng lần đầu.",
-                )
-              }
-            >
-              <ArrowDownToLine size={14} />
-              Cài ứng dụng
-            </button>
-          )}
-        </footer>
-        <p className="connection-note">
-          {!online
-            ? "Đang ngoại tuyến"
-            : offlineReady
-              ? "Sẵn sàng đếm ngoại tuyến"
-              : "Đếm an tâm, theo nhịp của bạn"}
-          <span>·</span>
-          {manifest.files.length === 100
-            ? `Sonia MP3${offlineCount === 100 ? " · đã lưu offline" : ""}`
-            : "Chưa có bộ MP3 Sonia"}
-        </p>
-      </main>
+      <MainCounter
+        count={count}
+        settings={settings}
+        settingsButton={settingsButton}
+        settingsOpen={settingsOpen}
+        openSettings={() => setSettingsOpen(true)}
+        edit={edit}
+        increment={increment}
+        decrease={decrease}
+        change={change}
+        pulse={pulse}
+      />
       {settingsOpen && (
         <Settings
           settings={settings}
+          count={count}
+          online={online}
+          offlineReady={offlineReady}
+          install={async () => {
+            if (installPrompt) {
+              await installPrompt.prompt();
+              setInstallPrompt(null);
+            } else {
+              setNotice(
+                "Cài ứng dụng từ menu Chrome ⋮ → Cài đặt ứng dụng / Thêm vào màn hình chính.",
+              );
+            }
+          }}
           change={change}
           close={() => setSettingsOpen(false)}
           player={player}
