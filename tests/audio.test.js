@@ -152,3 +152,19 @@ test("playback status comes from real media events and ignores old callbacks", (
   assert.match(s.statuses.at(-1), /002.mp3 · đã phát xong/);
   s.player.dispose();
 });
+test("IndexedDB blob sources take priority over hosted MP3 and retain latest-tap behavior", () => {
+  const s = setup();
+  s.player.setLocalFiles(
+    new Map([
+      [1, "blob:private-one"],
+      [2, "blob:private-two"],
+    ]),
+  );
+  s.player.speak(1, defaults);
+  s.player.speak(2, defaults);
+  assert.deepEqual(s.plays, ["blob:private-one", "blob:private-two"]);
+  assert.equal(s.utterances.length, 0);
+  s.player.speak(3, defaults);
+  assert.equal(s.plays.at(-1), "/audio/sonia/003.mp3");
+  s.player.dispose();
+});

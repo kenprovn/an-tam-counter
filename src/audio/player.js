@@ -12,6 +12,7 @@ export class NumberPlayer {
     this.onStatus = onStatus;
     this.sequence = 0;
     this.available = new Set();
+    this.localSources = new Map();
     this.voicesChanged = () => {
       if (this.pending) {
         const pending = this.pending;
@@ -23,6 +24,9 @@ export class NumberPlayer {
   }
   setFiles(files) {
     this.available = new Set(files);
+  }
+  setLocalFiles(sources) {
+    this.localSources = new Map(sources);
   }
   stop() {
     this.sequence++;
@@ -54,7 +58,7 @@ export class NumberPlayer {
       fallback();
       return;
     }
-    if (!this.available.has(number)) {
+    if (!this.localSources.has(number) && !this.available.has(number)) {
       if (settings.fallback) fallback();
       else
         this.onStatus("Chưa có file Sonia cho số này. Số biến vẫn được lưu.");
@@ -63,7 +67,7 @@ export class NumberPlayer {
     this.audio.volume = settings.volume;
     this.audio.playbackRate = settings.rate;
     this.audio.preservesPitch = true;
-    this.audio.src = audioPath(number);
+    this.audio.src = this.localSources.get(number) ?? audioPath(number);
     const filename = audioPath(number).split("/").at(-1);
     this.audio.onplaying = () => {
       if (sequence === this.sequence)

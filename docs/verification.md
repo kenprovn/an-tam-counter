@@ -64,3 +64,14 @@ Unit test Audio dùng đối tượng mô phỏng trong bộ nhớ, không tạo
 - Checkout từ Git index sang thư mục kiểm tra riêng, không có 100 MP3 cục bộ; `npm ci`, 21/21 test và build với `VERCEL=1` đều thành công. Manifest của bản này có 0/100 file, dist không chứa MP3.
 - `/build-info.json` ghi commit SHA và số MP3 thực sự trong bản build; không thêm thành phần giao diện.
 - Đối chiếu SHA-256 trước/sau chuẩn bị phát hành: đủ 100 MP3 cục bộ, tổng 1.121.472 byte, không đổi.
+
+## ZIP riêng trong IndexedDB
+
+- Quyền phân phối bộ MP3 chưa được xác minh, nên chọn phương án ZIP riêng. Không đổi `.gitignore` để công khai âm thanh. ZIP `.local/sonia-001-100-private.zip` chứa đúng 100 file gốc, 1.083.964 byte, không upload.
+- Thêm duy nhất chức năng chọn ZIP trong card Âm thanh hiện có, không thay màn hình đếm/CSS/theme. Kiểm tra danh mục ZIP, tên/đường dẫn/trùng file, giới hạn giải nén, CRC, MP3, PCM và SHA-256 trước khi lưu.
+- IndexedDB lưu pack và con trỏ active trong cùng transaction; giữ nguyên các pack trước, count/localStorage và cài đặt. Pack được nạp vào blob URL trước khi chạm, phát đồng bộ trong user gesture, không đọc IndexedDB bất đồng bộ lúc đếm.
+- 30/30 test đạt, gồm ZIP nén, thư mục chứa, file thiếu/trùng/hỏng, đường dẫn không hợp lệ, ZIP mã hóa, giới hạn dung lượng, hủy import, rollback IndexedDB và ưu tiên blob URL. Build local và checkout chỉ có source với `VERCEL=1` đều thành công; bản source-only host 0 MP3.
+- Trình duyệt: source-only preview 0 MP3, nhập ZIP đạt 100/100, preview 027 phát hết, reload vẫn 100/100 từ IndexedDB. Nhập ZIP 99 file bị từ chối và bộ cũ vẫn phát 027.
+- Tắt origin preview, reload PWA, khôi phục pack từ IndexedDB và chạm để phát 001/002/027/080/099/100 đến sự kiện `ended`, đúng count tương ứng. Không phụ thuộc cache MP3 host sẵn vì bản test không có MP3 trên server.
+- Settings viewport 320 px: contentWidth = clientWidth = 309; không tràn ngang. Chưa kiểm tra Android thật.
+- Bằng chứng riêng tư: `.local/zip-offline-review.json`, `.local/zip-indexeddb-proof.jpg`. Chỉ deploy code nhập ZIP; mỗi điện thoại phải chọn ZIP riêng, không tự đồng bộ âm thanh.

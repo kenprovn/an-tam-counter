@@ -24,6 +24,21 @@ PWA/service worker chỉ được đăng ký trong bản production (`build` + `
 
 ## Nhập bộ MP3 đã chuẩn bị
 
+### Dùng ZIP riêng trên điện thoại, không công khai MP3
+
+Khi chưa xác minh được quyền phân phối, không đưa MP3 lên GitHub/Vercel. Ứng dụng hỗ trợ bộ âm thanh riêng trong **IndexedDB** của từng thiết bị:
+
+1. Tạo ZIP chứa đủ `001.mp3` … `100.mp3` (có thể nằm trong một thư mục `sonia/`). ZIP không mật khẩu, không ZIP64, tối đa 32 MiB cả tệp ZIP và dữ liệu giải nén. Không cần kèm manifest.
+2. Chuyển ZIP sang điện thoại qua cách riêng của bạn. ZIP cục bộ đã chuẩn bị trên máy này: `.local/sonia-001-100-private.zip`; tệp này bị Git bỏ qua và không được host trên Vercel.
+3. Mở ứng dụng/PWA trên đúng URL production → **Cài đặt → Âm thanh → Nhập ZIP âm thanh riêng** → chọn ZIP trên điện thoại.
+4. Chờ thông báo **100/100 MP3 trong IndexedDB**. Ứng dụng kiểm tra đủ tên, CRC, cấu trúc MP3, thời lượng, dữ liệu âm thanh và SHA-256 trước khi kích hoạt bộ mới. Toàn bộ quá trình chạy trong trình duyệt, không upload ZIP hoặc MP3 lên server.
+5. Bộ ZIP được ưu tiên hơn MP3 host sẵn. Dữ liệu MP3 được nạp từ IndexedDB thành blob URL trước khi đếm, vì vậy phát vẫn bắt đầu trực tiếp trong thao tác chạm. Có đầy đủ âm lượng, tốc độ, hủy âm cũ và fallback khi file không khả dụng hoặc số vượt 100.
+6. Sau khi mở ứng dụng online ít nhất một lần để cache mã PWA, có thể reload và phát âm thanh offline. Bộ giọng phải nhập riêng cho mỗi thiết bị/browser/origin; localhost và production không dùng chung IndexedDB.
+
+Nhập ZIP không thay số đếm, theme, mục tiêu hoặc cài đặt khác (chỉ chuyển chế độ phát sang MP3). Nhập lỗi/hết quota không thay thế bộ đang dùng. Các bộ đã lưu trước đó không bị xóa khi nhập bộ mới. Dữ liệu không đồng bộ lên cloud; giữ ZIP gốc để nhập lại nếu trình duyệt xóa dữ liệu hoặc bạn dùng thiết bị khác. Chưa xác minh độc lập giọng bên trong ZIP là Sonia; kiểm tra kỹ thuật không chứng minh danh tính giọng hoặc quyền phân phối.
+
+### Đặt MP3 trong thư mục project để phát cục bộ
+
 1. Đặt các tệp **001.mp3 … 100.mp3** vào `D:\01_Projects\Count\an-tam-counter\public\audio\sonia\`. Mỗi tệp đọc đúng số tương ứng. Không đổi đuôi WAV/HTML thành `.mp3`; chữ thường và ba chữ số là bắt buộc. Có thể thêm từng phần; số thiếu dùng TTS nếu đã bật dự phòng.
 2. Chạy `npm run audio:check`. Công cụ kiểm tra đủ 100 tên, dung lượng 256 byte–2 MiB/tệp, chuỗi frame MPEG Layer III không bị cắt, giải mã PCM có tín hiệu, thời lượng 0,1–15 giây. Đây là giới hạn cho clip đọc một số. Tệp lỗi bị loại khỏi manifest; báo cáo chi tiết nằm ở **`.local/sonia-validation.json`**, gồm lý do lỗi, tệp thiếu, tổng byte, thời lượng, hash SHA-256 và mức tín hiệu. `npm run audio:scan` cho phép quét bộ chưa đủ mà không bắt buộc đủ 100.
 3. Chạy `npm run build`, rồi `npm run preview`. Chỉ các MP3 đã đạt kiểm tra được đưa vào `dist`. **Bản build cục bộ này có chứa âm thanh riêng tư; không tải `dist` lên hosting khi chưa xác minh quyền.** Không cần cài FFmpeg cho build; decoder WASM chỉ là dependency khi phát triển/build, không đưa vào frontend.

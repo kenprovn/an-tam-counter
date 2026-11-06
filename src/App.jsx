@@ -7,6 +7,12 @@ import { createCounter } from "./utils/counter.js";
 import { NumberPlayer } from "./audio/player.js";
 import { downloadAudio } from "./audio/cache.js";
 import { verifyLibrary, validateManifest } from "./audio/library.js";
+import { loadDevicePack, saveDevicePack } from "./audio/device-store.js";
+import {
+  importZipPack,
+  verifyDevicePack,
+  deviceSources,
+} from "./audio/zip-pack.js";
 import { useWakeLock } from "./hooks/useWakeLock.js";
 import Settings from "./components/Settings.jsx";
 import Dialog from "./components/Dialog.jsx";
@@ -25,6 +31,12 @@ export default function App() {
   const [manifest, setManifest] = useState({ files: [], revision: "empty" });
   const [offlineCount, setOfflineCount] = useState(0);
   const [downloading, setDownloading] = useState(false);
+  const [deviceManifest, setDeviceManifest] = useState(null);
+  const [importingZip, setImportingZip] = useState(false);
+  const [zipProgress, setZipProgress] = useState(0);
+  const privateSources = useRef(new Map()),
+    deviceEpoch = useRef(0),
+    zipAbort = useRef(null);
   const [online, setOnline] = useState(navigator.onLine);
   const [offlineReady, setOfflineReady] = useState(false);
   const [installPrompt, setInstallPrompt] = useState(null);
@@ -51,6 +63,47 @@ export default function App() {
     player.current = audio;
     let disposed = false;
     const controller = new AbortController();
+    const epoch = deviceEpoch.current;
+    loadDevicePack()
+      .then(async (pack) => {
+        if (!pack || disposed || epoch !== deviceEpoch.current) return;
+        setDeviceManifest({
+          ...pack.manifest,
+          files: [],
+          checking: true,
+          checked: 0,
+          candidates: 100,
+        });
+        const verified = await verifyDevicePack(pack, {
+          signal: controller.signal,
+          onProgress: (value) => {
+            if (!disposed && epoch === deviceEpoch.current)
+              setDeviceManifest({
+                ...value,
+                source: "zip-device",
+                checking: value.checked < 100,
+                candidates: 100,
+              });
+          },
+        });
+        if (disposed || epoch !== deviceEpoch.current) return;
+        const sources = deviceSources(pack, verified.files);
+        for (const url of privateSources.current.values())
+          URL.revokeObjectURL(url);
+        privateSources.current = sources;
+        audio.setLocalFiles(sources);
+        setDeviceManifest({
+          ...verified,
+          source: "zip-device",
+          checking: false,
+        });
+      })
+      .catch((error) => {
+        if (!disposed && epoch === deviceEpoch.current) {
+          setDeviceManifest(null);
+          setNotice(`Chưa tải được bộ ZIP riêng. ${error.message}`);
+        }
+      });
     fetch("/audio/sonia/manifest.json", {
       signal: controller.signal,
       cache: "no-store",
@@ -102,6 +155,10 @@ export default function App() {
       controller.abort();
       audio.dispose();
       abort.current?.abort();
+      zipAbort.current?.abort();
+      for (const url of privateSources.current.values())
+        URL.revokeObjectURL(url);
+      privateSources.current = new Map();
     };
   }, []);
   useEffect(() => {
@@ -268,6 +325,43 @@ export default function App() {
       setDownloading(false);
     }
   }
+  async function importAudioZip(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || importingZip) return;
+    deviceEpoch.current++;
+    setImportingZip(true);
+    setZipProgress(0);
+    zipAbort.current = new AbortController();
+    try {
+      const pack = await importZipPack(file, {
+        signal: zipAbort.current.signal,
+        onProgress: setZipProgress,
+      });
+      await saveDevicePack(pack);
+      zipAbort.current.signal.throwIfAborted();
+      const sources = deviceSources(pack);
+      player.current?.stop();
+      player.current?.setLocalFiles(sources);
+      for (const url of privateSources.current.values())
+        URL.revokeObjectURL(url);
+      privateSources.current = sources;
+      setDeviceManifest({ ...pack.manifest, checking: false });
+      change({ mode: "mp3" });
+      setNotice(
+        "Đã lưu 100/100 MP3 từ ZIP vào IndexedDB trên thiết bị. Không tải âm thanh lên máy chủ.",
+      );
+    } catch (error) {
+      if (error.name !== "AbortError")
+        setNotice(
+          error.name === "QuotaExceededError"
+            ? "Không đủ dung lượng lưu ZIP. Bộ đã lưu trước đó vẫn được giữ."
+            : error.message,
+        );
+    } finally {
+      setImportingZip(false);
+    }
+  }
   const theme = themes[settings.theme];
   return (
     <div
@@ -309,8 +403,13 @@ export default function App() {
           change={change}
           close={() => setSettingsOpen(false)}
           player={player}
-          manifest={manifest}
-          offlineCount={offlineCount}
+          manifest={deviceManifest ?? manifest}
+          offlineCount={
+            deviceManifest ? deviceManifest.files.length : offlineCount
+          }
+          importAudioZip={importAudioZip}
+          importingZip={importingZip}
+          zipProgress={zipProgress}
           downloading={downloading}
           download={download}
           status={audioStatus}

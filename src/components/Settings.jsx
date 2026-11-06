@@ -54,6 +54,9 @@ export default function Settings({
   offlineCount,
   downloading,
   download,
+  importAudioZip,
+  importingZip,
+  zipProgress,
   status,
   notice,
   edit,
@@ -170,27 +173,45 @@ export default function Settings({
               <p>
                 {manifest.checking
                   ? `Đang kiểm tra khả năng giải mã ${manifest.checked}/${manifest.candidates} MP3 trên thiết bị…`
-                  : manifest.files.length === 100
-                    ? `Đã lưu offline ${offlineCount}/100 file trên thiết bị này.`
-                    : `Có ${manifest.files.length}/100 MP3 hợp lệ trên thiết bị. File thiếu hoặc lỗi sẽ dùng giọng dự phòng nếu được bật.`}
+                  : manifest.source === "zip-device"
+                    ? `Bộ ZIP riêng: ${manifest.files.length}/100 MP3 trong IndexedDB trên thiết bị. Không tải lên máy chủ.`
+                    : manifest.files.length === 100
+                      ? `Đã lưu offline ${offlineCount}/100 file trên thiết bị này.`
+                      : `Có ${manifest.files.length}/100 MP3 hợp lệ trên thiết bị. File thiếu hoặc lỗi sẽ dùng giọng dự phòng nếu được bật.`}
               </p>
-              <button
-                className="secondary-button full"
-                disabled={
-                  downloading ||
-                  manifest.checking ||
-                  manifest.files.length !== 100
-                }
-                onClick={download}
-              >
-                <Download size={16} />
-                {downloading
-                  ? `Đang lưu ${offlineCount}/100…`
-                  : "Tải 100 file để nghe offline"}
-              </button>
+              {manifest.source !== "zip-device" && (
+                <button
+                  className="secondary-button full"
+                  disabled={
+                    downloading ||
+                    manifest.checking ||
+                    manifest.files.length !== 100
+                  }
+                  onClick={download}
+                >
+                  <Download size={16} />
+                  {downloading
+                    ? `Đang lưu ${offlineCount}/100…`
+                    : "Tải 100 file để nghe offline"}
+                </button>
+              )}
+              <label className="secondary-button full file-button">
+                <Upload size={16} />
+                {importingZip
+                  ? `Đang kiểm tra ZIP ${zipProgress}/100…`
+                  : "Nhập ZIP âm thanh riêng"}
+                <input
+                  aria-label="Nhập ZIP âm thanh riêng"
+                  type="file"
+                  accept=".zip,application/zip,application/x-zip-compressed"
+                  disabled={importingZip || manifest.checking}
+                  onChange={importAudioZip}
+                />
+              </label>
               <small>
-                Trình duyệt có thể xóa bộ nhớ đệm khi thiếu dung lượng. TTS dự
-                phòng không được đảm bảo offline.
+                ZIP cần đủ 001.mp3–100.mp3. Chỉ lưu trên thiết bị; giữ bản ZIP
+                dự phòng vì trình duyệt có thể xóa dữ liệu khi thiếu dung lượng.
+                TTS dự phòng không được đảm bảo offline.
               </small>
             </div>
           </Group>
