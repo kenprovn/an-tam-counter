@@ -29,6 +29,8 @@ export class NumberPlayer {
     this.pending = null;
     clearTimeout(this.voiceTimer);
     this.audio.onerror = null;
+    this.audio.onplaying = null;
+    this.audio.onended = null;
     this.audio.pause();
     this.audio.removeAttribute("src");
     this.audio.load();
@@ -43,6 +45,8 @@ export class NumberPlayer {
       if (sequence !== this.sequence || fallbackStarted) return;
       fallbackStarted = true;
       this.audio.onerror = null;
+      this.audio.onplaying = null;
+      this.audio.onended = null;
       this.audio.pause();
       this.tts(number, settings, sequence);
     };
@@ -60,6 +64,15 @@ export class NumberPlayer {
     this.audio.playbackRate = settings.rate;
     this.audio.preservesPitch = true;
     this.audio.src = audioPath(number);
+    const filename = audioPath(number).split("/").at(-1);
+    this.audio.onplaying = () => {
+      if (sequence === this.sequence)
+        this.onStatus(`Sonia · MP3 · ${filename} · đang phát`);
+    };
+    this.audio.onended = () => {
+      if (sequence === this.sequence)
+        this.onStatus(`Sonia · MP3 · ${filename} · đã phát xong`);
+    };
     this.audio.onerror = () => {
       if (sequence !== this.sequence) return;
       this.audio.onerror = null;

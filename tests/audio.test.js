@@ -139,3 +139,16 @@ test("voices load asynchronously without speaking old taps", () => {
   );
   s.player.dispose();
 });
+test("playback status comes from real media events and ignores old callbacks", () => {
+  const s = setup();
+  s.player.speak(1, defaults);
+  const previousEnd = s.audio.onended;
+  s.audio.onplaying();
+  assert.match(s.statuses.at(-1), /001.mp3 · đang phát/);
+  s.player.speak(2, defaults);
+  previousEnd();
+  assert.doesNotMatch(s.statuses.at(-1), /001.mp3 · đã phát xong/);
+  s.audio.onended();
+  assert.match(s.statuses.at(-1), /002.mp3 · đã phát xong/);
+  s.player.dispose();
+});

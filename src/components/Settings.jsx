@@ -168,13 +168,19 @@ export default function Settings({
                 <span className="badge">{manifest.files.length}/100 MP3</span>
               </div>
               <p>
-                {manifest.files.length === 100
-                  ? `Đã lưu offline ${offlineCount}/100 file trên thiết bị này.`
-                  : "Chưa có đủ file giọng Sonia thật. Nghe thử sẽ dùng giọng dự phòng nếu được bật."}
+                {manifest.checking
+                  ? `Đang kiểm tra khả năng giải mã ${manifest.checked}/${manifest.candidates} MP3 trên thiết bị…`
+                  : manifest.files.length === 100
+                    ? `Đã lưu offline ${offlineCount}/100 file trên thiết bị này.`
+                    : `Có ${manifest.files.length}/100 MP3 hợp lệ trên thiết bị. File thiếu hoặc lỗi sẽ dùng giọng dự phòng nếu được bật.`}
               </p>
               <button
                 className="secondary-button full"
-                disabled={downloading || manifest.files.length !== 100}
+                disabled={
+                  downloading ||
+                  manifest.checking ||
+                  manifest.files.length !== 100
+                }
                 onClick={download}
               >
                 <Download size={16} />

@@ -1,0 +1,6 @@
+public/audio/sonia/*.mp3
+public/audio/sonia/*.tmp
+public/audio/sonia/generation.json
+dist/
+.local/
+tests/

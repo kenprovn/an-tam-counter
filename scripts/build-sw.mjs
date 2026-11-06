@@ -1,6 +1,33 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 const root = new URL("../dist/", import.meta.url);
+let commit = process.env.VERCEL_GIT_COMMIT_SHA;
+if (!/^[a-f0-9]{40}$/.test(commit ?? "")) {
+  try {
+    commit = execFileSync("git", ["rev-parse", "HEAD"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    commit = "unknown";
+  }
+}
+const library = JSON.parse(
+  await readFile(new URL("audio/sonia/manifest.json", root), "utf8"),
+);
+await writeFile(
+  new URL("build-info.json", root),
+  JSON.stringify(
+    {
+      commit,
+      audioFiles: library.files.length,
+      audioRevision: library.revision,
+    },
+    null,
+    2,
+  ) + "\n",
+);
 async function walk(directory, prefix = "") {
   const result = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {

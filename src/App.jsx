@@ -5,7 +5,8 @@ import { themes } from "./config.js";
 import { loadData, saveData, validCount, parseData } from "./utils/storage.js";
 import { createCounter } from "./utils/counter.js";
 import { NumberPlayer } from "./audio/player.js";
-import { cachedCount, downloadAudio } from "./audio/cache.js";
+import { downloadAudio } from "./audio/cache.js";
+import { verifyLibrary, validateManifest } from "./audio/library.js";
 import { useWakeLock } from "./hooks/useWakeLock.js";
 import Settings from "./components/Settings.jsx";
 import Dialog from "./components/Dialog.jsx";
@@ -49,33 +50,56 @@ export default function App() {
     const audio = new NumberPlayer({ onStatus: setAudioStatus });
     player.current = audio;
     let disposed = false;
-    fetch("/audio/sonia/manifest.json")
+    const controller = new AbortController();
+    fetch("/audio/sonia/manifest.json", {
+      signal: controller.signal,
+      cache: "no-store",
+    })
       .then((response) => {
         if (!response.ok) throw new Error();
         return response.json();
       })
       .then(async (data) => {
         if (disposed) return;
-        if (
-          data.voice !== "en-GB-SoniaNeural" ||
-          !Array.isArray(data.files) ||
-          !data.files.every((n) => Number.isInteger(n) && n >= 1 && n <= 100) ||
-          new Set(data.files).size !== data.files.length
-        )
-          throw new Error();
+        validateManifest(data);
+        // Build validation already confirmed these files. Try MP3 immediately;
+        // device verification removes failures without delaying the user's tap.
         audio.setFiles(data.files);
-        setManifest(data);
-        const cached = await cachedCount(data);
-        if (!disposed) setOfflineCount(cached);
+        setManifest({
+          ...data,
+          files: [],
+          checking: true,
+          checked: 0,
+          candidates: data.files.length,
+        });
+        const update = (result) => {
+          if (disposed) return;
+          const failed = new Set(result.unavailable.map((item) => item.number));
+          audio.setFiles(data.files.filter((number) => !failed.has(number)));
+          setManifest({
+            ...result,
+            checking: result.checked < data.files.length,
+            candidates: data.files.length,
+          });
+          setOfflineCount(result.cached);
+        };
+        const result = await verifyLibrary(data, {
+          signal: controller.signal,
+          onProgress: update,
+        });
+        update(result);
       })
-      .catch(() => {
-        if (!disposed)
+      .catch((error) => {
+        if (!disposed) {
+          setManifest((value) => ({ ...value, checking: false }));
           setAudioStatus(
-            "Chưa tải được danh sách MP3 Sonia. Đang dùng cấu hình dự phòng.",
+            `Chưa kiểm tra được thư viện MP3. ${error.message} Giọng dự phòng vẫn khả dụng.`,
           );
+        }
       });
     return () => {
       disposed = true;
+      controller.abort();
       audio.dispose();
       abort.current?.abort();
     };

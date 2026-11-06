@@ -1,14 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { statSync } from "node:fs";
+import { statSync, existsSync } from "node:fs";
 const root = new URL("../", import.meta.url);
 test("Sonia dry-run plans all 100 numbers without credentials or file changes", () => {
   const manifest = new URL(
     "../public/audio/sonia/manifest.json",
     import.meta.url,
   );
-  const before = statSync(manifest).mtimeMs;
+  const before = existsSync(manifest) ? statSync(manifest).mtimeMs : null;
   const result = spawnSync(
     process.execPath,
     ["scripts/generate-sonia.mjs", "--dry-run"],
@@ -26,7 +26,10 @@ test("Sonia dry-run plans all 100 numbers without credentials or file changes", 
     result.stdout.match(/(?:Keep|Would generate) \d{3}\.mp3:/g).length,
     100,
   );
-  assert.equal(statSync(manifest).mtimeMs, before);
+  assert.equal(
+    existsSync(manifest) ? statSync(manifest).mtimeMs : null,
+    before,
+  );
 });
 test("Sonia synthesis fails clearly without local credentials", () => {
   const result = spawnSync(process.execPath, ["scripts/generate-sonia.mjs"], {

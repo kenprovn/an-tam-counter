@@ -11,15 +11,17 @@
     "test": "node --test",
     "audio:generate": "node scripts/generate-sonia.mjs",
     "audio:plan": "node scripts/generate-sonia.mjs --dry-run",
+    "audio:scan": "node scripts/prepare-audio.mjs",
     "audio:check": "node scripts/prepare-audio.mjs --require-complete"
   },
   "dependencies": {
+    "lucide-react": "^0.468.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "lucide-react": "^0.468.0"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "vite": "^7.2.2",
-    "@vitejs/plugin-react": "^5.1.0"
+    "@vitejs/plugin-react": "^5.1.0",
+    "mpg123-decoder": "^1.0.3",
+    "vite": "^7.2.2"
   }
 }

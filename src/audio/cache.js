@@ -1,5 +1,6 @@
 import { audioPath } from "./numbers.js";
-export const cacheName = (manifest) => `sonia-${manifest.revision}`;
+import { verifyLibrary, audioCacheName } from "./library.js";
+export const cacheName = audioCacheName;
 export async function cachedCount(manifest) {
   if (!globalThis.caches) return 0;
   const cache = await caches.open(cacheName(manifest));
@@ -15,21 +16,13 @@ export async function downloadAudio(manifest, onProgress, signal) {
     throw new Error(
       `Mới có ${manifest.files.length}/100 file Sonia trên máy chủ.`,
     );
-  const cache = await caches.open(cacheName(manifest));
-  let count = 0;
-  for (const number of manifest.files) {
-    signal?.throwIfAborted();
-    const path = audioPath(number);
-    if (!(await cache.match(path))) {
-      const response = await fetch(path, { signal, cache: "reload" });
-      if (
-        !response.ok ||
-        !response.headers.get("content-type")?.includes("audio/")
-      )
-        throw new Error(`Không tải được ${path}. Thử lại khi có mạng.`);
-      await cache.put(path, response);
-    }
-    onProgress(++count);
-  }
-  return count;
+  const result = await verifyLibrary(manifest, {
+    signal,
+    onProgress: (result) => onProgress(result.cached),
+  });
+  if (result.cached !== 100)
+    throw new Error(
+      `Mới lưu được ${result.cached}/100 MP3 hợp lệ. Kiểm tra mạng và dung lượng trình duyệt.`,
+    );
+  return result.cached;
 }

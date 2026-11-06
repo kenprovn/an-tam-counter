@@ -12,7 +12,7 @@ Ngày thực hiện: 06/11/2026 (Asia/Saigon).
 - Mute, volume/rate, fallback thiếu MP3, số >100, lỗi MP3, lỗi autoplay, voiceschanged đến trễ.
 - Service worker trả app shell và MP3 range từ cache khi fetch mạng không hoạt động.
 
-## Chưa thể xác nhận
+## Chưa thể xác nhận ở lần triển khai ban đầu
 
 - Sonia thật: chưa có quyền truy cập resource Azure trong môi trường, 0/100 file.
 - Chất lượng phát/độ đều âm lượng/khoảng lặng của file thật: cần tổng hợp và nghe kiểm tra.
@@ -44,3 +44,23 @@ Unit test Audio dùng đối tượng mô phỏng trong bộ nhớ, không tạo
 - Thêm `npm run audio:plan`: dry-run liệt kê đúng 001…100, không cần key, không gọi mạng, không ghi file. Kiểm thử thiếu credentials xác nhận script thoát với thông báo rõ ràng.
 - `npm test`: 14/14 đạt sau cập nhật; `npm run build`: thành công. Ảnh mới: `docs/mobile-preview.jpg`, `docs/ui-green.jpg`, `docs/settings-preview.jpg`.
 - Bản production mới: 10 lần chạm từ 0 cho đúng 10; nhập 27 và reload vẫn 27. Sau khi dừng máy chủ preview, reload từ service worker vẫn mở được giao diện mới, chạm tăng từ 27 lên 28. Không xác nhận phát Sonia offline vì chưa có MP3 thật.
+
+## Tích hợp bộ MP3 người dùng cung cấp — 06/11/2026
+
+- Có đủ 001.mp3…100.mp3, 100 hash SHA-256 khác nhau, 1.121.472 byte (~1,07 MiB). Không tạo lại, đổi tên hoặc sửa file gốc.
+- Kiểm tra cấu trúc MPEG Layer III và giải mã PCM của cả 100 file: không rỗng, không chỉ im lặng, không có lỗi decoder. Các file là mono 24 kHz; mẫu 027 có thời lượng 1,872 giây theo FFprobe.
+- Windows Speech Recognizer cục bộ, grammar gồm 100 số: sáu mẫu 1/2/27/80/99/100 khớp văn bản, confidence 0,928–0,981. Đây là nhận dạng máy, không phải nghe trực tiếp; không xác nhận danh tính người/giọng Sonia hoặc quyền phân phối. Báo cáo chi tiết ở `.local/audio-review/recognition.json`.
+- Trình duyệt desktop 390×844: kiểm tra giải mã và hash đạt 100/100, cache đủ 100/100. Với sáu số trên, đặt count = n−1 rồi chạm: count = n; sự kiện media `ended` báo đúng 001/002/027/080/099/100.mp3. Không dùng TTS trong sáu lượt này.
+- Đã dừng tiến trình Vite preview, reload từ service worker và phát lại cả sáu mẫu đến sự kiện `ended` thành công. Đây là kiểm tra offline audio thực tế khi origin server không truy cập được, không chỉ đếm offline. Chưa thử chế độ máy bay/Android thật.
+- Offline: thay volume sang 75%, rate 1,25x, nghe thử 027 phát đến hết; khôi phục 80%/1x. Số 101 dùng TTS dự phòng; giảm về 100 vẫn đúng. Nhập 0 rồi chạm 20 lần liên tiếp: count 20, file cuối 020.mp3 phát đến hết.
+- 320×700: scrollWidth = viewport width, scrollHeight = viewport height. Không chỉnh CSS hoặc bố cục UI.
+- Các file âm thanh vẫn bị `.gitignore` bỏ qua; Git không track MP3 nào trong public/audio/sonia. Không commit/push/deploy bộ này vì chưa có căn cứ xác minh quyền phân phối. Thêm chặn build Vercel khi có MP3 cục bộ và loại file lỗi khỏi dist.
+- Báo cáo riêng tư: `.local/sonia-validation.json`, `.local/browser-audio-review.json`; ảnh bằng chứng `.local/sonia-offline-proof.jpg`.
+- Kiểm tra cuối: `npm run audio:check` đạt 100/100; `npm test` đạt 21/21; `npm run build` thành công. Cả 100 MP3 trong dist có SHA-256 trùng file nguồn, không tái tạo hoặc thay đổi dữ liệu âm thanh.
+
+## Kiểm tra bản phát hành chỉ có mã nguồn
+
+- Manifest sinh tự động được bỏ khỏi Git index, vẫn giữ nguyên bản local. Không có MP3 binary nào trong commit; test signal được mã hóa trong JavaScript, không phải giọng Sonia.
+- Checkout từ Git index sang thư mục kiểm tra riêng, không có 100 MP3 cục bộ; `npm ci`, 21/21 test và build với `VERCEL=1` đều thành công. Manifest của bản này có 0/100 file, dist không chứa MP3.
+- `/build-info.json` ghi commit SHA và số MP3 thực sự trong bản build; không thêm thành phần giao diện.
+- Đối chiếu SHA-256 trước/sau chuẩn bị phát hành: đủ 100 MP3 cục bộ, tổng 1.121.472 byte, không đổi.
