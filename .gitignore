@@ -9,6 +9,4 @@ dist/
 playwright-report/
 test-results/
 .local/
-/public/audio/sonia/*
-!/public/audio/sonia/README.md
 /tests/fixtures/*.mp3
