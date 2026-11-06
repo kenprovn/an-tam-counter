@@ -1,0 +1,25 @@
+export const themes = {
+  purple: { name: "Tím đen", accent: "#bda5f5", bg: "#100e18" },
+  green: { name: "Xanh lá", accent: "#9bceb2", bg: "#0d1612" },
+  blue: { name: "Xanh dương", accent: "#9ebff2", bg: "#0d121b" },
+  pink: { name: "Hồng đen", accent: "#e6abc8", bg: "#190f17" },
+  earth: { name: "Cam đất", accent: "#dcb08b", bg: "#19120e" },
+  amoled: { name: "AMOLED", accent: "#b9b4c3", bg: "#000000" },
+};
+export const defaults = {
+  enabled: true,
+  volume: 0.8,
+  rate: 1,
+  mode: "mp3",
+  fallback: true,
+  speakOnDecrease: false,
+  theme: "purple",
+  glow: true,
+  animation: true,
+  fontSize: 1,
+  vibration: false,
+  debounce: 0,
+  wakeLock: false,
+  battery: false,
+  goal: 100,
+};
